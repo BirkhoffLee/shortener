@@ -19,14 +19,15 @@ header("Content-type: text/html; charset=utf-8");
  * 此為本程式所在站點的網址
  * 請在開頭加上 http:// 字串尾巴要有 /
 */
-$newURL = 'http://s.irkhoff.com/';
+$newURL = 'http://site/';
 
 /*
  * $json
  * 此為短網址資料庫存放位置
  * 請在開頭加上 /
+ * 請一併更改 redirect.php 的相同一行
 */
-$json = '/a_si921jAY.json';
+$json = '/k8agJa1__.json';
 
 /*
  * $regenerate_config
@@ -37,6 +38,9 @@ $regenerate_config = true;
 
 //---------------- 請勿更改 ---------------//
 $json = dirname(__FILE__) . $json;
+if($newURL == 'http://site/'){
+	die('請更改 index.php 中的站點網址!');
+}
 ?>
 <html>
   <head>
@@ -72,39 +76,57 @@ if(isset($_POST['action']) and $_POST['action'] == 'generate'){
 		$valueADD = ' value="' . $_POST['url'] . '"';
 		$urlJSON = json_decode(file_get_contents($json), true);
 		foreach ($urlJSON as $key => $value) {
-			if($value == $url and $done == false){
+			if($value == $url and $done == false and !isset($_POST['id'])){
 				$newURL .= $key;
 				echo '完成！短網址：<a href="' . $newURL . '">' . $newURL . '</a>';
 				$done = true;
 			}
 		}
 		if(!$done){
-			$x = sprintf("%u", crc32($url));
-			$id = '';
-			while($x > 0){
-				$s = $x % 62;
-				if ($s > 35){
-					$s = chr($s + 61);
-				} elseif ($s > 9 && $s <= 35){
-					$s = chr($s + 55);
+			if(!isset($_POST['id'])){
+				$x = sprintf("%u", crc32($url));
+				$id = '';
+				while($x > 0){
+					$s = $x % 62;
+					if ($s > 35){
+						$s = chr($s + 61);
+					} elseif ($s > 9 && $s <= 35){
+						$s = chr($s + 55);
+					}
+					$id .= $s;
+					$x = floor($x/62);
 				}
-				$id .= $s;
-				$x = floor($x/62);
+				$urlJSON[$id] = $url;
+				$fn = fopen($json, "w");
+				foreach ($urlJSON as $key => $value) {
+				    $ukey = urlencode($key);
+				    $uvalue = urlencode($value);
+				    $new_urlJSON[$ukey] = $uvalue;
+				}
+				fwrite($fn, urldecode(json_encode($new_urlJSON)));
+				fclose($fn);
+
+				$newURL .= $id;
+				echo '完成！短網址：<a href="' . $newURL . '">' . $newURL . '</a>';
+			} elseif(strlen($_POST['id'])!==5){
+				echo '發生錯誤！請確認您的 自定代碼 長度為 5 個字元。';
+			} elseif(preg_match("/^(([a-z]+[0-9]+)|([0-9]+[a-z]+))[a-z0-9]*$/i", $_POST['id'])){
+				echo '發生錯誤！請確認您的 自定代碼 不含有大小寫英文字母及數字以外的字元。';
+			} else {
+				$id = $_POST['id'];
+				$urlJSON[$id] = $url;
+				$fn = fopen($json, "w");
+				foreach ($urlJSON as $key => $value) {
+				    $ukey = urlencode($key);
+				    $uvalue = urlencode($value);
+				    $new_urlJSON[$ukey] = $uvalue;
+				}
+				fwrite($fn, urldecode(json_encode($new_urlJSON)));
+				fclose($fn);
+
+				$newURL .= $id;
+				echo '完成！短網址：<a href="' . $newURL . '">' . $newURL . '</a>';
 			}
-
-			$urlJSON[$id] = $url;
-			$fn = fopen($json, "w");
-			foreach ($urlJSON as $key => $value) {
-			    $ukey = urlencode($key);
-			    $uvalue = urlencode($value);
-			    $new_urlJSON[$ukey] = $uvalue;
-			}
-			fwrite($fn, urldecode(json_encode($new_urlJSON)));
-			fclose($fn);
-
-			$newURL .= $id;
-
-			echo '完成！短網址：<a href="' . $newURL . '">' . $newURL . '</a>';
 		}
 	} else {
 		echo '發生錯誤！請確認您的 URL 符合正確格式：http(s)://*.*(/*)';
@@ -125,6 +147,7 @@ $valueADD = (isset($valueADD)) ? $valueADD : '';
       </div>
       <div class="input">
         <input type="text" class="button" id="url" name="url" placeholder="http://www.google.com">
+        <input type="text" class="button" id="id" name="id" placeholder="自定代碼 (可空)" maxlength="5">
         <input type="submit" class="button" id="submit" value="SHORTEN!">
       </div>
       <input type="hidden" id="action" name="action" value="generate">

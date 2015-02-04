@@ -1,3 +1,4 @@
+Options -Indexes
 RewriteEngine on
 RewriteBase /
 RewriteRule ^([a-zA-Z0-9]*)$ redirect.php?id=$1 [L]
