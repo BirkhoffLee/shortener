@@ -55,17 +55,17 @@ $json = dirname(__FILE__) . $json;
 
 if(isset($_POST['action']) and $_POST['action'] == 'generate'){
 	if(	isset($_POST['url']) and
-	strpos($_POST['url'], 'http') !== FALSE and 
-	strpos($_POST['url'], ':') !== FALSE and 
-	strpos($_POST['url'], '//') !== FALSE and 
-	strpos($_POST['url'], '.') !== FALSE and 
-	strpos($_POST['url'], '\r') === FALSE and 
-	strpos($_POST['url'], '\n') === FALSE and 
-	strpos($_POST['url'], '%00') === FALSE and 
-	strpos($_POST['url'], '"') === FALSE and 
-	strpos($_POST['url'], '\'') === FALSE and 
-	strpos($_POST['url'], '{') === FALSE and 
-	strpos($_POST['url'], '}') === FALSE){
+	stripos($_POST['url'], 'http') !== FALSE and 
+	stripos($_POST['url'], ':') !== FALSE and 
+	stripos($_POST['url'], '//') !== FALSE and 
+	stripos($_POST['url'], '.') !== FALSE and 
+	stripos($_POST['url'], '\r') === FALSE and 
+	stripos($_POST['url'], '\n') === FALSE and 
+	stripos($_POST['url'], '%00') === FALSE and 
+	stripos($_POST['url'], '"') === FALSE and 
+	stripos($_POST['url'], '\'') === FALSE and 
+	stripos($_POST['url'], '{') === FALSE and 
+	stripos($_POST['url'], '}') === FALSE){
 		
 		$done = false;
 		$url = $_POST['url'];
