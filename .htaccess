@@ -1,4 +1,10 @@
 Options -Indexes
+
+<FilesMatch ".(json)$">
+ Order allow,deny
+ Deny from all
+</FilesMatch>
+
 RewriteEngine on
 RewriteBase /
 RewriteRule ^([a-zA-Z0-9]*)$ redirect.php?id=$1 [L]
