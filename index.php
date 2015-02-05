@@ -83,7 +83,7 @@ if(isset($_POST['action']) and $_POST['action'] == 'generate'){
 			}
 		}
 		if(!$done){
-			if(!isset($_POST['id'])){
+			if(!isset($_POST['id']) or strlen($_POST['id'])==0){
 				$x = sprintf("%u", crc32($url));
 				$id = '';
 				while($x > 0){
@@ -110,7 +110,7 @@ if(isset($_POST['action']) and $_POST['action'] == 'generate'){
 				echo '完成！短網址：<a href="' . $newURL . '">' . $newURL . '</a>';
 			} elseif(strlen($_POST['id'])!==5 and strlen($_POST['id'])!==0){
 				echo '發生錯誤！請確認您的 自定代碼 長度為 5 個字元。';
-			} elseif(!preg_match("/^(([a-z]+[0-9]+)|([0-9]+[a-z]+))[a-z0-9]*$/i", $_POST['id'])){
+			} elseif(!preg_match("/^(([a-z]+[0-9]+)|([0-9]+[a-z]+))[a-z0-9]*$/i", $_POST['id']) and strlen($_POST['id'])!==0){
 				echo '發生錯誤！請確認您的 自定代碼 同時包含英文、數字，且不包含其他字元。';
 			} else {
 				$id = $_POST['id'];
