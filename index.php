@@ -68,6 +68,14 @@ if(isset($_POST['action']) and $_POST['action'] == 'generate'){
 				$done = true;
 			}
 		}
+		$urlJSON = json_decode(file_get_contents($json), true);
+		$PID = $_POST['id'];
+		if(isset($urlJSON[$PID])){
+			$newURL .= $id;
+			echo '這個代碼已經被別人使用過了，請使用另外一個代碼！';
+			$done = true;
+		}
+		unset($PID);
 		if(!$done){
 			if(!isset($_POST['id']) or strlen($_POST['id'])==0){
 				$x = sprintf("%u", crc32($url));
