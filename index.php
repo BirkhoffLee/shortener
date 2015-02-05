@@ -139,7 +139,10 @@ if(isset($_POST['action']) and $_POST['action'] == 'generate'){
                     },
                     dataType:"html",
                     success: function(data){
-                        $(".description").html(data);
+						$(".description").fadeOut(function(){
+							$(".description").html(data);
+                    		$(".description").fadeIn();
+						});
                     }
                 });
             });
