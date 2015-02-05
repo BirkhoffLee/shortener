@@ -110,7 +110,7 @@ if(isset($_POST['action']) and $_POST['action'] == 'generate'){
 				echo '完成！短網址：<a href="' . $newURL . '">' . $newURL . '</a>';
 			} elseif(strlen($_POST['id'])!==5){
 				echo '發生錯誤！請確認您的 自定代碼 長度為 5 個字元。';
-			} elseif(preg_match("/^(([a-z]+[0-9]+)|([0-9]+[a-z]+))[a-z0-9]*$/i", $_POST['id'])){
+			} elseif(!preg_match("/^(([a-z]+[0-9]+)|([0-9]+[a-z]+))[a-z0-9]*$/i", $_POST['id'])){
 				echo '發生錯誤！請確認您的 自定代碼 不含有大小寫英文字母及數字以外的字元。';
 			} else {
 				$id = $_POST['id'];
