@@ -4,7 +4,7 @@
  * 必須開啟 apache 的 mod_rewrite，否則將無法運作
  * 作者: Birkhoff Lee (site: b.irkhoff.com)
  * 作者 E-mail: b@irkhoff.com  (有問題歡迎詢問)
- * 感謝 Pc Chou 的熱心協助
+ * 感謝 Pc Chou 的熱心協助(雖然他的版本的超級多BUG讓我改了好久www
  * -
  * 尊重著作權，請保留作者資訊
 */
@@ -18,7 +18,7 @@ header("Content-type: text/html; charset=utf-8");
  *  改成 $regenerate_config = false;
  *  即可完成安裝過程
 */
-require_once "config.php" or die('<h1>Cannot access config file. Did you read the message in index.php?</h1>');
+require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . "config.php";
 global $json;
 global $newURL;
 global $regenerate_config;
