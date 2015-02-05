@@ -4,18 +4,21 @@
  * 必須開啟 apache 的 mod_rewrite，否則將無法運作
  * 作者: Birkhoff Lee (site: b.irkhoff.com)
  * 作者 E-mail: b@irkhoff.com  (有問題歡迎詢問)
+ * 感謝 Pc Chou 的熱心協助
+ * -
  * 尊重著作權，請保留作者資訊
 */
 header("Content-type: text/html; charset=utf-8");
 
-/*  必讀
- *	第一次使用，請務必訪問一次
+/*  第一次使用必讀
+ *  先將 config.sample.php 改名成 config.php
+ *  然後訪問一次
  *  http://站點網址/index.php?action=regenerate_config
- *  來生成資料庫檔案，然後將 config.sample.php 的 $regenerate_config = true;
+ *  來生成資料庫檔案，接著將 config.php 的 $regenerate_config = true;
  *  改成 $regenerate_config = false;
- *  並且完成其他設定後，改名成 config.php
+ *  即可完成安裝過程
 */
-include "config.php";
+require_once "config.php" or die('<h1>Cannot access config file. Did you read the message in index.php?</h1>');
 
 //---------------- 請勿更改 ---------------//
 $json = dirname(__FILE__) . $json;
@@ -39,7 +42,7 @@ if($newURL == 'http://site/'){
         <p><?php
 
 if(isset($_POST['action']) and $_POST['action'] == 'generate'){
-	if(	isset($_POST['url']) and
+	if(isset($_POST['url']) and
 	stripos($_POST['url'], 'http') !== FALSE and
 	stripos($_POST['url'], ':') !== FALSE and
 	stripos($_POST['url'], '//') !== FALSE and
