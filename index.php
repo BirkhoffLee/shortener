@@ -23,7 +23,6 @@ global $json;
 global $newURL;
 global $regenerate_config;
 
-//---------------- 請勿更改 ---------------//
 $json = dirname(__FILE__) . $json;
 if($newURL == 'http://site/'){
 	die('請更改 index.php 中的站點網址!');
