@@ -1,5 +1,5 @@
 <?php
-require_once "config.php" or die('<h1>Cannot access config file. Did you read the message in index.php?</h1>');
+require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . "config.php";
 global $json;
 
 if(strlen($_GET['id']) == 0){
