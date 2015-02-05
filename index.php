@@ -1,6 +1,7 @@
 <?php
 /*
  * 請將本程式放在站點根目錄，否則將無法正確運作
+ * 必須開啟 apache 的 mod_rewrite，否則將無法運作
  * 作者: Birkhoff Lee (site: b.irkhoff.com)
  * 作者 E-mail: b@irkhoff.com  (有問題歡迎詢問)
  * 尊重著作權，請保留作者資訊
