@@ -13,6 +13,7 @@
  * 尊重著作權，請保留作者資訊
 */
 header("Content-type: text/html; charset=utf-8");
+if(!session_id()) session_start();
 
 /*  第一次使用必讀
  *  先將 config.sample.php 改名成 config.php
@@ -32,90 +33,117 @@ if($newURL == 'http://site/'){
 	die('請更改 index.php 中的站點網址!');
 }
 
-if(isset($_POST['action']) and $_POST['action'] == 'generate'){
-	if(isset($_POST['url']) and
-	stripos($_POST['url'], 'http') !== FALSE and
-	stripos($_POST['url'], ':') !== FALSE and
-	stripos($_POST['url'], '//') !== FALSE and
-	stripos($_POST['url'], '.') !== FALSE and
-	stripos($_POST['url'], '\r') === FALSE and
-	stripos($_POST['url'], '\n') === FALSE and
-	stripos($_POST['url'], '%00') === FALSE and
-	stripos($_POST['url'], '"') === FALSE and
-	stripos($_POST['url'], '\'') === FALSE and
-	stripos($_POST['url'], '{') === FALSE and
-	stripos($_POST['url'], '}') === FALSE){
+function generateToken(){
+	return md5(substr(md5(uniqid(rand())), 0, 12) . substr(md5(uniqid(time())), 0, 12));
+}
 
-		$done = false;
-		$url = $_POST['url'];
-		$valueADD = ' value="' . $_POST['url'] . '"';
-		$urlJSON = json_decode(file_get_contents($json), true);
-		foreach ($urlJSON as $key => $value) {
-			if($value == $url and $done == false and !isset($_POST['id'])){
-				$newURL .= $key;
-				echo '完成！短網址：<a href="' . $newURL . '">' . $newURL . '</a>';
+if(!isset($_SESSION['token'])){
+	$token = generateToken();
+	$_SESSION['token'] = $token;
+	$_SESSION['tokenTIME'] = 10;
+	$_SESSION['regenTOKEN'] = false;
+} else {
+	$token = $_SESSION['token'];
+}
+
+if(isset($_POST['action']) and $_POST['action'] == 'generate' and @$_POST['token'] == $token){
+	if($_SESSION['tokenTIME'] == 0){
+		$_SESSION['regenTOKEN'] = true;
+		echo '請重新整理頁面！';
+		exit;
+	} else {
+		$_SESSION['tokenTIME']--;
+		if (isset($_POST['url']) and
+			stripos($_POST['url'], 'http') !== FALSE and
+			stripos($_POST['url'], ':') !== FALSE and
+			stripos($_POST['url'], '//') !== FALSE and
+			stripos($_POST['url'], '.') !== FALSE and
+			stripos($_POST['url'], '\r') === FALSE and
+			stripos($_POST['url'], '\n') === FALSE and
+			stripos($_POST['url'], '%00') === FALSE and
+			stripos($_POST['url'], '"') === FALSE and
+			stripos($_POST['url'], '\'') === FALSE and
+			stripos($_POST['url'], '{') === FALSE and
+			stripos($_POST['url'], '}') === FALSE){
+
+			$done = false;
+			$url = $_POST['url'];
+			$valueADD = ' value="' . $_POST['url'] . '"';
+			$urlJSON = json_decode(file_get_contents($json), true);
+			foreach ($urlJSON as $key => $value) {
+				if($value == $url and $done == false and !isset($_POST['id'])){
+					$newURL .= $key;
+					echo '完成！短網址：<a href="' . $newURL . '">' . $newURL . '</a>';
+					$done = true;
+				}
+			}
+			$urlJSON = json_decode(file_get_contents($json), true);
+			$PID = $_POST['id'];
+			if(isset($urlJSON[$PID])){
+				$newURL .= $id;
+				echo '這個代碼已經被別人使用過了，請使用另外一個代碼！';
 				$done = true;
 			}
-		}
-		$urlJSON = json_decode(file_get_contents($json), true);
-		$PID = $_POST['id'];
-		if(isset($urlJSON[$PID])){
-			$newURL .= $id;
-			echo '這個代碼已經被別人使用過了，請使用另外一個代碼！';
-			$done = true;
-		}
-		unset($PID);
-		if(!$done){
-			if(!isset($_POST['id']) or strlen($_POST['id'])==0){
-				$x = sprintf("%u", crc32($url));
-				$id = '';
-				while($x > 0){
-					$s = $x % 62;
-					if ($s > 35){
-						$s = chr($s + 61);
-					} elseif ($s > 9 && $s <= 35){
-						$s = chr($s + 55);
+			unset($PID);
+			if(!$done){
+				if(!isset($_POST['id']) or strlen($_POST['id'])==0){
+					$x = sprintf("%u", crc32($url));
+					$id = '';
+					while($x > 0){
+						$s = $x % 62;
+						if ($s > 35){
+							$s = chr($s + 61);
+						} elseif ($s > 9 && $s <= 35){
+							$s = chr($s + 55);
+						}
+						$id .= $s;
+						$x = floor($x/62);
 					}
-					$id .= $s;
-					$x = floor($x/62);
-				}
-				$urlJSON[$id] = $url;
-				$fn = fopen($json, "w");
-				foreach ($urlJSON as $key => $value) {
-				    $ukey = urlencode($key);
-				    $uvalue = urlencode($value);
-				    $new_urlJSON[$ukey] = $uvalue;
-				}
-				fwrite($fn, urldecode(json_encode($new_urlJSON)));
-				fclose($fn);
+					$urlJSON[$id] = $url;
+					$fn = fopen($json, "w");
+					foreach ($urlJSON as $key => $value) {
+					    $ukey = urlencode($key);
+					    $uvalue = urlencode($value);
+					    $new_urlJSON[$ukey] = $uvalue;
+					}
+					fwrite($fn, urldecode(json_encode($new_urlJSON)));
+					fclose($fn);
 
-				$newURL .= $id;
-				echo '完成！短網址：<a href="' . $newURL . '">' . $newURL . '</a>';
-			} elseif(strlen($_POST['id'])!==5 and strlen($_POST['id'])!==0){
-				echo '發生錯誤！請確認您的 自定代碼 長度為 5 個字元。';
-			} elseif(!preg_match("/^(([a-z]+[0-9]+)|([0-9]+[a-z]+))[a-z0-9]*$/i", $_POST['id']) and strlen($_POST['id'])!==0){
-				echo '發生錯誤！請確認您的 自定代碼 同時包含英文、數字，且不包含其他字元。';
-			} else {
-				$id = $_POST['id'];
-				$urlJSON[$id] = $url;
-				$fn = fopen($json, "w");
-				foreach ($urlJSON as $key => $value) {
-				    $ukey = urlencode($key);
-				    $uvalue = urlencode($value);
-				    $new_urlJSON[$ukey] = $uvalue;
-				}
-				fwrite($fn, urldecode(json_encode($new_urlJSON)));
-				fclose($fn);
+					$newURL .= $id;
+					echo '完成！短網址：<a href="' . $newURL . '">' . $newURL . '</a>';
+				} elseif(strlen($_POST['id'])!==5 and strlen($_POST['id'])!==0){
+					echo '發生錯誤！請確認您的 自定代碼 長度為 5 個字元。';
+				} elseif(!preg_match("/^(([a-z]+[0-9]+)|([0-9]+[a-z]+))[a-z0-9]*$/i", $_POST['id']) and strlen($_POST['id'])!==0){
+					echo '發生錯誤！請確認您的 自定代碼 同時包含英文、數字，且不包含其他字元。';
+				} else {
+					$id = $_POST['id'];
+					$urlJSON[$id] = $url;
+					$fn = fopen($json, "w");
+					foreach ($urlJSON as $key => $value) {
+					    $ukey = urlencode($key);
+					    $uvalue = urlencode($value);
+					    $new_urlJSON[$ukey] = $uvalue;
+					}
+					fwrite($fn, urldecode(json_encode($new_urlJSON)));
+					fclose($fn);
 
-				$newURL .= $id;
-				echo '完成！短網址：<a href="' . $newURL . '">' . $newURL . '</a>';
+					$newURL .= $id;
+					echo '完成！短網址：<a href="' . $newURL . '">' . $newURL . '</a>';
+				}
 			}
+		} else {
+			echo '發生錯誤！請確認您的 URL 符合正確格式：http(s)://*.*(/*)';
+			$valueADD = ' value="' . $_POST['url'] . '"';
 		}
-	} else {
-		echo '發生錯誤！請確認您的 URL 符合正確格式：http(s)://*.*(/*)';
-		$valueADD = ' value="' . $_POST['url'] . '"';
+		exit;
 	}
-	exit;
+}
+
+if($_SESSION['tokenTIME'] == 0){
+	$token = generateToken();
+	$_SESSION['token'] = $token;
+	$_SESSION['tokenTIME'] = 10;
+	$_SESSION['regenTOKEN'] = false;
 }
 ?>
 <html>
@@ -126,27 +154,28 @@ if(isset($_POST['action']) and $_POST['action'] == 'generate'){
     <link href='http://fonts.googleapis.com/css?family=Lato:400,700' rel='stylesheet' type='text/css'>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
     <script>
-        $(document).ready(function(){ 
-            $("#submit").on("click",function(e){
-                e.preventDefault();
-                $.ajax({
-                    url: "index.php",
-                    type: "POST",
-                    data: {
-                        url: $("#url").val(),
-                        id: $("#id").val(),
-                        action: $("#action").val()
-                    },
-                    dataType:"html",
-                    success: function(data){
+		$(document).ready(function(){ 
+			$("#submit").on("click",function(e){
+				e.preventDefault();
+				$.ajax({
+					url: "index.php",
+					type: "POST",
+					data: {
+						url: $("#url").val(),
+						id: $("#id").val(),
+						action: $("#action").val(),
+						token: $("#token").val()
+					},
+					dataType:"html",
+					success: function(data){
 						$(".description").fadeOut(function(){
 							$(".description").html(data);
-                    		$(".description").fadeIn();
+							$(".description").fadeIn();
 						});
-                    }
-                });
-            });
-        });
+					}
+				});
+			});
+		});
     </script>
   </head>
   <body>
@@ -155,10 +184,9 @@ if(isset($_POST['action']) and $_POST['action'] == 'generate'){
          <p>URL SHORTENER</p>
       </div>
       <div class="description">
-        <p>
-<?php
+        <p><?php
 if(isset($_GET['action']) and $_GET['action'] == 'regenerate_config' and $regenerate_config) {
-	$urlJSON = array('' => '');
+	$urlJSON = array('http://goo.gl' => 'googl');
 	$fn = fopen($json, "w");
 	fwrite($fn, json_encode($urlJSON));
 	fclose($fn);
@@ -167,7 +195,6 @@ if(isset($_GET['action']) and $_GET['action'] == 'regenerate_config' and $regene
 } else {
 	echo '本服務開放給每個人使用，如果有不懂的地方或建議，煩請來信至 b[at]irkhoff.com 告知。感謝您。';
 }
-$valueADD = (isset($valueADD)) ? $valueADD : '';
 ?></p>
       </div>
       <div class="input">
@@ -176,6 +203,7 @@ $valueADD = (isset($valueADD)) ? $valueADD : '';
         <input type="submit" class="button" id="submit" value="SHORTEN!">
       </div>
       <input type="hidden" id="action" name="action" value="generate">
+      <input type="hidden" id="token" name="token" value="<?php echo $token; ?>">
     </form>
   </body>
 </html>
