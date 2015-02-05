@@ -19,6 +19,9 @@ header("Content-type: text/html; charset=utf-8");
  *  即可完成安裝過程
 */
 require_once "config.php" or die('<h1>Cannot access config file. Did you read the message in index.php?</h1>');
+global $json;
+global $newURL;
+global $regenerate_config;
 
 //---------------- 請勿更改 ---------------//
 $json = dirname(__FILE__) . $json;
