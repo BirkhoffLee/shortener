@@ -6,7 +6,7 @@ if(strlen($_GET['id']) == 0){
 	header('Location: /index.php');
 	exit;
 }
-$json = dirname(__FILE__) . $json;
+$json = dirname(__FILE__) . DIRECTORY_SEPARATOR . $json;
 $id = $_GET['id'];
 
 $newURL = '';

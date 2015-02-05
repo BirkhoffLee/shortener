@@ -1,10 +1,14 @@
 <?php
 /*
+ * # Description
  * 請將本程式放在站點根目錄，否則將無法正確運作
  * 必須開啟 apache 的 mod_rewrite，否則將無法運作
  * 作者: Birkhoff Lee (site: b.irkhoff.com)
  * 作者 E-mail: b@irkhoff.com  (有問題歡迎詢問)
+ *
+ * # Thanks to
  * 感謝 Pc Chou 的熱心協助(雖然他的版本的超級多BUG讓我改了好久www
+ * 感謝 Allen Chou 協助前端 AJAX
  * -
  * 尊重著作權，請保留作者資訊
 */
@@ -23,25 +27,10 @@ global $json;
 global $newURL;
 global $regenerate_config;
 
-$json = dirname(__FILE__) . $json;
+$json = dirname(__FILE__) . DIRECTORY_SEPARATOR . $json;
 if($newURL == 'http://site/'){
 	die('請更改 index.php 中的站點網址!');
 }
-?>
-<html>
-  <head>
-    <meta charset="utf-8">
-    <title>URL Shortener - Powered by Birkhoff</title>
-    <link rel="stylesheet" href="css/style.css">
-    <link href='http://fonts.googleapis.com/css?family=Lato:400,700' rel='stylesheet' type='text/css'>
-  </head>
-  <body>
-    <form action="#" method="post" name="Shortener">
-      <div class="header">
-         <p>URL SHORTENER</p>
-      </div>
-      <div class="description">
-        <p><?php
 
 if(isset($_POST['action']) and $_POST['action'] == 'generate'){
 	if(isset($_POST['url']) and
@@ -126,7 +115,46 @@ if(isset($_POST['action']) and $_POST['action'] == 'generate'){
 		echo '發生錯誤！請確認您的 URL 符合正確格式：http(s)://*.*(/*)';
 		$valueADD = ' value="' . $_POST['url'] . '"';
 	}
-} elseif(isset($_GET['action']) and $_GET['action'] == 'regenerate_config' and $regenerate_config) {
+	exit;
+}
+?>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>URL Shortener - Powered by Birkhoff</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href='http://fonts.googleapis.com/css?family=Lato:400,700' rel='stylesheet' type='text/css'>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+    <script>
+        $(document).ready(function(){ 
+            $("#submit").on("click",function(e){
+                e.preventDefault();
+                $.ajax({
+                    url: "index.php",
+                    type: "POST",
+                    data: {
+                        url: $("#url").val(),
+                        id: $("#id").val(),
+                        action: $("#action").val()
+                    },
+                    dataType:"html",
+                    success: function(data){
+                        $(".description").html(data);
+                    }
+                });
+            });
+        });
+    </script>
+  </head>
+  <body>
+    <form action="#" method="post" name="Shortener">
+      <div class="header">
+         <p>URL SHORTENER</p>
+      </div>
+      <div class="description">
+        <p>
+<?php
+if(isset($_GET['action']) and $_GET['action'] == 'regenerate_config' and $regenerate_config) {
 	$urlJSON = array('' => '');
 	$fn = fopen($json, "w");
 	fwrite($fn, json_encode($urlJSON));
