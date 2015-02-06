@@ -153,36 +153,11 @@ if($_SESSION['tokenTIME'] == 0){
     <link rel="stylesheet" href="css/style.css">
     <link href='http://fonts.googleapis.com/css?family=Lato:400,700' rel='stylesheet' type='text/css'>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
-    <script>
-		$(document).ready(function(){ 
-			$("#submit").on("click",function(e){
-				e.preventDefault();
-				$.ajax({
-					url: "index.php",
-					type: "POST",
-					data: {
-						url: $("#url").val(),
-						id: $("#id").val(),
-						action: $("#action").val(),
-						token: $("#token").val()
-					},
-					dataType:"html",
-					success: function(data){
-						$(".description").fadeOut(function(){
-							$(".description").html(data);
-							$(".description").fadeIn();
-						});
-					}
-				});
-			});
-		});
-    </script>
+    <script src="<?php echo $newURL;?>form.js"></script>
   </head>
   <body>
     <form action="#" method="post" name="Shortener">
-      <div class="header">
-         <p>URL SHORTENER</p>
-      </div>
+      <div class="header"></div>
       <div class="description">
         <p><?php
 if(isset($_GET['action']) and $_GET['action'] == 'regenerate_config' and $regenerate_config) {
