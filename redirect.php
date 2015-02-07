@@ -2,7 +2,7 @@
 require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . "config.php";
 global $json;
 
-if(strlen($_GET['id']) == 0){
+if(strlen(@$_GET['id']) == 0){
 	header('Location: /index.php');
 	exit;
 }

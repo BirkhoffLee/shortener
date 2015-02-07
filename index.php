@@ -28,13 +28,17 @@ global $json;
 global $newURL;
 global $regenerate_config;
 
-$json = dirname(__FILE__) . DIRECTORY_SEPARATOR . $json;
-if($newURL == 'http://site/'){
-	die('請更改 index.php 中的站點網址!');
-}
-
 function generateToken(){
 	return md5(substr(md5(uniqid(rand())), 0, 12) . substr(md5(uniqid(time())), 0, 12));
+}
+function __($text){
+	global $lang;
+	return $lang[$text];
+}
+
+$json = dirname(__FILE__) . DIRECTORY_SEPARATOR . $json;
+if($newURL == 'http://site/'){
+	die(__('DEFAULT_SITEURL'));
 }
 
 if(!isset($_SESSION['token'])){
@@ -49,7 +53,7 @@ if(!isset($_SESSION['token'])){
 if(isset($_POST['action']) and $_POST['action'] == 'generate' and @$_POST['token'] == $token){
 	if($_SESSION['tokenTIME'] == 0){
 		$_SESSION['regenTOKEN'] = true;
-		echo '請重新整理頁面！';
+		echo __('RELOAD_PAGE');
 		exit;
 	} else {
 		$_SESSION['tokenTIME']--;
@@ -73,7 +77,7 @@ if(isset($_POST['action']) and $_POST['action'] == 'generate' and @$_POST['token
 			foreach ($urlJSON as $key => $value) {
 				if($value == $url and $done == false and !isset($_POST['id'])){
 					$newURL .= $key;
-					echo '完成！短網址：<a href="' . $newURL . '">' . $newURL . '</a>';
+					echo str_replace('{url}', '<a href="' . $newURL . '">' . $newURL . '</a>', __('SHORTENED'));
 					$done = true;
 				}
 			}
@@ -81,7 +85,7 @@ if(isset($_POST['action']) and $_POST['action'] == 'generate' and @$_POST['token
 			$PID = $_POST['id'];
 			if(isset($urlJSON[$PID])){
 				$newURL .= $id;
-				echo '這個代碼已經被別人使用過了，請使用另外一個代碼！';
+				echo __('CODE_USED');
 				$done = true;
 			}
 			unset($PID);
@@ -110,11 +114,11 @@ if(isset($_POST['action']) and $_POST['action'] == 'generate' and @$_POST['token
 					fclose($fn);
 
 					$newURL .= $id;
-					echo '完成！短網址：<a href="' . $newURL . '">' . $newURL . '</a>';
+					echo str_replace('{url}', '<a href="' . $newURL . '">' . $newURL . '</a>', __('SHORTENED'));
 				} elseif(strlen($_POST['id'])!==5 and strlen($_POST['id'])!==0){
-					echo '發生錯誤！請確認您的 自定代碼 長度為 5 個字元。';
+					echo __('ERR_CODE_LENGTH');
 				} elseif(!preg_match("/^(([a-z]+[0-9]+)|([0-9]+[a-z]+))[a-z0-9]*$/i", $_POST['id']) and strlen($_POST['id'])!==0){
-					echo '發生錯誤！請確認您的 自定代碼 同時包含英文、數字，且不包含其他字元。';
+					echo __('ERR_CODE_TEXT');
 				} else {
 					$id = $_POST['id'];
 					$urlJSON[$id] = $url;
@@ -128,11 +132,11 @@ if(isset($_POST['action']) and $_POST['action'] == 'generate' and @$_POST['token
 					fclose($fn);
 
 					$newURL .= $id;
-					echo '完成！短網址：<a href="' . $newURL . '">' . $newURL . '</a>';
+					echo str_replace('{url}', '<a href="' . $newURL . '">' . $newURL . '</a>', __('SHORTENED'));
 				}
 			}
 		} else {
-			echo '發生錯誤！請確認您的 URL 符合正確格式：http(s)://*.*(/*)';
+			echo __('ERR_URL_FORMAT');
 			$valueADD = ' value="' . $_POST['url'] . '"';
 		}
 		exit;
@@ -166,15 +170,15 @@ if(isset($_GET['action']) and $_GET['action'] == 'regenerate_config' and $regene
 	fwrite($fn, json_encode($urlJSON));
 	fclose($fn);
 
-	echo '資料庫生成成功，請務必將 $regenerate_config 的值改為 false 以保資料庫安全!';
+	echo __('DATABASE_GENERATED');
 } else {
-	echo '本服務開放給每個人使用，如果有不懂的地方或建議，煩請來信至 b[at]irkhoff.com 告知。感謝您。';
+	echo str_replace('{here}', __('HERE'), __('WELCOME_MESSAGE'));
 }
 ?></p>
       </div>
       <div class="input">
         <input type="text" class="button" id="url" name="url" placeholder="http://www.google.com">
-        <input type="text" class="button" id="id" name="id" placeholder="自定代碼 (可空)" maxlength="5">
+        <input type="text" class="button" id="id" name="id" placeholder="<?php echo __('CODE_PLACEHOLDER');?>" maxlength="5">
         <input type="submit" class="button" id="submit" value="SHORTEN!">
       </div>
       <input type="hidden" id="action" name="action" value="generate">

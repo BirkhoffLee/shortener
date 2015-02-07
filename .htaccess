@@ -5,6 +5,16 @@ Options -Indexes
  Deny from all
 </FilesMatch>
 
+<Files "config.php">
+Order Allow,Deny
+Deny from all
+</Files>
+
+<Files "config.sample.php">
+Order Allow,Deny
+Deny from all
+</Files>
+
 RewriteEngine on
 RewriteBase /
 RewriteRule ^([a-zA-Z0-9]*)$ redirect.php?id=$1 [L]
