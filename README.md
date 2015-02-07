@@ -2,6 +2,7 @@ URL Shortener
 =====
     作者 Birkhoff
     部落格 http://b.irkhoff.com  
+    此為 http://reurl.us 所使用的原始碼  
 
 系統需求
 ------
