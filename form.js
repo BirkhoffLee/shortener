@@ -1,4 +1,8 @@
-$(document).ready(function(){ 
+$(document).ready(function(){
+	$('head').append('<link rel="stylesheet" href="css/style.css" type="text/css">');
+	$('head').append('<link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Lato:400,700"type="text/css">');
+	$(".header").html("<p>URL SHORTENER</p>");
+
 	$("#submit").on("click",function(e){
 		e.preventDefault();
 		$.ajax({
@@ -24,5 +28,4 @@ $(document).ready(function(){
 			}
 		});
 	});
-	$(".header").html("<p>URL SHORTENER</p>");
 });
