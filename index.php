@@ -133,8 +133,6 @@ if(isset($_POST['action']) and $_POST['action'] == 'generate' and @$_POST['token
 					echo __('ERR_CODE_LENGTH');
 				} elseif(!preg_match($pattern, $_POST['id']) and strlen($_POST['id'])!==0){
 					echo __('ERR_CODE_TEXT');
-				} elseif(explode('') and preg_match($pattern, $_POST['id'])){
-					echo __('ERR_CODE_TEXT');
 				} else {
 					$id = $_POST['id'];
 					$urlJSON[$id] = $url;
