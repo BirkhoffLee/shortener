@@ -15,8 +15,12 @@ $(document).ready(function(){
 			success: function(data){
 				$(".description").fadeOut(function(){
 					$(".description").html(data);
-					$(".description").fadeIn();
 				});
+				$(".g-recaptcha").fadeOut(function(){
+					grecaptcha.reset();
+				});
+				$(".description").fadeIn();
+				$(".g-recaptcha").fadeIn();
 			}
 		});
 	});
