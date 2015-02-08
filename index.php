@@ -13,7 +13,6 @@
  * 尊重著作權，請保留作者資訊
 */
 header("Content-type: text/html; charset=utf-8");
-if(!session_id()) session_start();
 
 /*  第一次使用必讀
  *  先將 config.sample.php 改名成 config.php
@@ -29,9 +28,6 @@ global $newURL;
 global $regenerate_config;
 $pattern = "/^(([a-z]+[0-9]+)|([0-9]+[a-z]+))[a-z0-9]*$/i";
 
-function generateToken(){
-	return md5(substr(md5(uniqid(rand())), 0, 12) . substr(md5(uniqid(time())), 0, 12));
-}
 function __($text){
 	global $lang;
 	return $lang[$text];
@@ -42,112 +38,96 @@ if($newURL == 'http://site/'){
 	die(__('DEFAULT_SITEURL'));
 }
 
-if(!isset($_SESSION['token'])){
-	$token = generateToken();
-	$_SESSION['token'] = $token;
-	$_SESSION['tokenTIME'] = 10;
-	$_SESSION['regenTOKEN'] = false;
-} else {
-	$token = $_SESSION['token'];
-}
-
 if(isset($_POST['action']) and $_POST['action'] == 'generate' and @$_POST['token'] == $token){
-	if($_SESSION['tokenTIME'] == 0){
-		$_SESSION['regenTOKEN'] = true;
-		echo __('RELOAD_PAGE');
-		exit;
-	} else {
-		$_SESSION['tokenTIME']--;
-		if (isset($_POST['url']) and
-			stripos($_POST['url'], 'http') !== FALSE and
-			stripos($_POST['url'], ':') !== FALSE and
-			stripos($_POST['url'], '//') !== FALSE and
-			stripos($_POST['url'], '.') !== FALSE and
-			stripos($_POST['url'], '\r') === FALSE and
-			stripos($_POST['url'], '\n') === FALSE and
-			stripos($_POST['url'], '%00') === FALSE and
-			stripos($_POST['url'], '"') === FALSE and
-			stripos($_POST['url'], '\'') === FALSE and
-			stripos($_POST['url'], '{') === FALSE and
-			stripos($_POST['url'], '}') === FALSE){
+	if (isset($_POST['url']) and
+		stripos($_POST['url'], 'http') !== FALSE and
+		stripos($_POST['url'], ':') !== FALSE and
+		stripos($_POST['url'], '//') !== FALSE and
+		stripos($_POST['url'], '.') !== FALSE and
+		stripos($_POST['url'], '\r') === FALSE and
+		stripos($_POST['url'], '\n') === FALSE and
+		stripos($_POST['url'], '%00') === FALSE and
+		stripos($_POST['url'], '"') === FALSE and
+		stripos($_POST['url'], '\'') === FALSE and
+		stripos($_POST['url'], '{') === FALSE and
+		stripos($_POST['url'], '}') === FALSE){
 
-			$done = false;
-			$url = $_POST['url'];
-			$valueADD = ' value="' . $_POST['url'] . '"';
-			$urlJSON = json_decode(file_get_contents($json), true);
-			foreach ($urlJSON as $key => $value) {
-				if($value == $url and $done == false and !isset($_POST['id'])){
-					$newURL .= $key;
-					echo str_replace('{url}', '<a href="' . $newURL . '">' . $newURL . '</a>', __('SHORTENED'));
-					$done = true;
-				}
-			}
-			$urlJSON = json_decode(file_get_contents($json), true);
-			$PID = $_POST['id'];
-			if(isset($urlJSON[$PID])){
-				$newURL .= $id;
-				echo __('CODE_USED');
+		$done = false;
+		$url = $_POST['url'];
+		$valueADD = ' value="' . $_POST['url'] . '"';
+		$urlJSON = json_decode(file_get_contents($json), true);
+		foreach ($urlJSON as $key => $value) {
+			if($value == $url and $done == false and !isset($_POST['id'])){
+				$newURL .= $key;
+				echo str_replace('{url}', '<a href="' . $newURL . '">' . $newURL . '</a>', __('SHORTENED'));
 				$done = true;
 			}
-			unset($PID);
+		}
+		$urlJSON = json_decode(file_get_contents($json), true);
+		$PID = $_POST['id'];
+		if(isset($urlJSON[$PID])){
+			$newURL .= $id;
+			echo __('CODE_USED');
+			$done = true;
+		}
+		unset($PID);
 
-			$ch = curl_init();
-			curl_setopt($ch, CURLOPT_URL, $url);
-			curl_setopt($ch, CURLOPT_HEADER, true);
-			curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-			curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-			$urlHeader = curl_exec($ch);
-			$uurl = curl_getinfo($ch, CURLINFO_EFFECTIVE_URL);
-			if($url != $uurl){
-				$url = $uurl;
-				unset($uurl);
-			}
+		$ch = curl_init();
+		curl_setopt($ch, CURLOPT_URL, $url);
+		curl_setopt($ch, CURLOPT_HEADER, true);
+		curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+		$urlHeader = curl_exec($ch);
+		$uurl = curl_getinfo($ch, CURLINFO_EFFECTIVE_URL);
+		if($url != $uurl){
+			$url = $uurl;
+			unset($uurl);
+		}
 
-			if(!$done){
-				if(!isset($_POST['id']) or strlen($_POST['id'])==0){
-					$x = sprintf("%u", crc32($url));
-					$id = '';
-					while($x > 0){
-						$s = $x % 62;
-						if ($s > 35){
-							$s = chr($s + 61);
-						} elseif ($s > 9 && $s <= 35){
-							$s = chr($s + 55);
-						}
-						$id .= $s;
-						$x = floor($x/62);
+		if(!$done){
+			if(!isset($_POST['id']) or strlen($_POST['id'])==0){
+				$x = sprintf("%u", crc32($url));
+				$id = '';
+				while($x > 0){
+					$s = $x % 62;
+					if ($s > 35){
+						$s = chr($s + 61);
+					} elseif ($s > 9 && $s <= 35){
+						$s = chr($s + 55);
 					}
-					$urlJSON[$id] = $url;
-					$fn = fopen($json, "w");
-					foreach ($urlJSON as $key => $value) {
-					    $ukey = urlencode($key);
-					    $uvalue = urlencode($value);
-					    $new_urlJSON[$ukey] = $uvalue;
-					}
-					fwrite($fn, urldecode(json_encode($new_urlJSON)));
-					fclose($fn);
-
-					$newURL .= $id;
-					echo str_replace('{url}', '<a href="' . $newURL . '">' . $newURL . '</a>', __('SHORTENED'));
-				} elseif(strlen($_POST['id'])!==5 and strlen($_POST['id'])!==0){
-					echo __('ERR_CODE_LENGTH');
-				} elseif(!preg_match($pattern, $_POST['id']) and strlen($_POST['id'])!==0){
-					echo __('ERR_CODE_TEXT');
-				} else {
-					$id = $_POST['id'];
-					$urlJSON[$id] = $url;
-					$fn = fopen($json, "w");
-					foreach ($urlJSON as $key => $value) {
-					    $ukey = urlencode($key);
-					    $uvalue = urlencode($value);
-					    $new_urlJSON[$ukey] = $uvalue;
-					}
-					fwrite($fn, urldecode(json_encode($new_urlJSON)));
-					fclose($fn);
-
-					$newURL .= $id;
-					echo str_replace('{url}', '<a href="' . $newURL . '">' . $newURL . '</a>', __('SHORTENED'));
+					$id .= $s;
+					$x = floor($x/62);
 				}
+				$urlJSON[$id] = $url;
+				$fn = fopen($json, "w");
+				foreach ($urlJSON as $key => $value) {
+				    $ukey = urlencode($key);
+				    $uvalue = urlencode($value);
+				    $new_urlJSON[$ukey] = $uvalue;
+				}
+				fwrite($fn, urldecode(json_encode($new_urlJSON)));
+				fclose($fn);
+
+				$newURL .= $id;
+				echo str_replace('{url}', '<a href="' . $newURL . '">' . $newURL . '</a>', __('SHORTENED'));
+			} elseif(strlen($_POST['id'])!==5 and strlen($_POST['id'])!==0){
+				echo __('ERR_CODE_LENGTH');
+			} elseif(!preg_match($pattern, $_POST['id']) and strlen($_POST['id'])!==0){
+				echo __('ERR_CODE_TEXT');
+			} else {
+				$id = $_POST['id'];
+				$urlJSON[$id] = $url;
+				$fn = fopen($json, "w");
+				foreach ($urlJSON as $key => $value) {
+				    $ukey = urlencode($key);
+				    $uvalue = urlencode($value);
+				    $new_urlJSON[$ukey] = $uvalue;
+				}
+				fwrite($fn, urldecode(json_encode($new_urlJSON)));
+				fclose($fn);
+
+				$newURL .= $id;
+				echo str_replace('{url}', '<a href="' . $newURL . '">' . $newURL . '</a>', __('SHORTENED'));
 			}
 		} else {
 			echo __('ERR_URL_FORMAT');
@@ -155,13 +135,6 @@ if(isset($_POST['action']) and $_POST['action'] == 'generate' and @$_POST['token
 		}
 		exit;
 	}
-}
-
-if($_SESSION['tokenTIME'] == 0){
-	$token = generateToken();
-	$_SESSION['token'] = $token;
-	$_SESSION['tokenTIME'] = 10;
-	$_SESSION['regenTOKEN'] = false;
 }
 ?>
 <html>
@@ -196,7 +169,6 @@ if(isset($_GET['action']) and $_GET['action'] == 'regenerate_config' and $regene
         <input type="submit" class="button" id="submit" value="SHORTEN!">
       </div>
       <input type="hidden" id="action" name="action" value="generate">
-      <input type="hidden" id="token" name="token" value="<?php echo $token; ?>">
     </form>
   </body>
 </html>

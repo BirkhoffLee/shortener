@@ -31,7 +31,6 @@ $regenerate_config = true;
 */
 $lang = array(
 	'DEFAULT_SITEURL' => '請更改 index.php 中的站點網址！',
-	'RELOAD_PAGE' => '請重新整理頁面！',
 	'SHORTENED' => '完成！短網址：{url}',
 	'CODE_USED' => '這個代碼已經被別人使用過了，請使用另外一個代碼！',
 	'ERR_CODE_LENGTH' => '發生錯誤！請確認您的 自定代碼 長度為 5 個字元。',
