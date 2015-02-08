@@ -38,7 +38,7 @@ if($newURL == 'http://site/'){
 	die(__('DEFAULT_SITEURL'));
 }
 
-if(isset($_POST['action']) and $_POST['action'] == 'generate' and @$_POST['token'] == $token){
+if(isset($_POST['action']) and $_POST['action'] == 'generate'){
 	if (isset($_POST['url']) and
 		stripos($_POST['url'], 'http') !== FALSE and
 		stripos($_POST['url'], ':') !== FALSE and
@@ -129,12 +129,12 @@ if(isset($_POST['action']) and $_POST['action'] == 'generate' and @$_POST['token
 				$newURL .= $id;
 				echo str_replace('{url}', '<a href="' . $newURL . '">' . $newURL . '</a>', __('SHORTENED'));
 			}
-		} else {
-			echo __('ERR_URL_FORMAT');
-			$valueADD = ' value="' . $_POST['url'] . '"';
 		}
-		exit;
+	} else {
+		echo __('ERR_URL_FORMAT');
+		$valueADD = ' value="' . $_POST['url'] . '"';
 	}
+	exit;
 }
 ?>
 <html>
