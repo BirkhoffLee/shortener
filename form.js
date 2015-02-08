@@ -8,7 +8,8 @@ $(document).ready(function(){
 				url: $("#url").val(),
 				id: $("#id").val(),
 				action: $("#action").val(),
-				token: $("#token").val()
+				token: $("#token").val(),
+				recaptchaResponse: $(".g-recaptcha-response").val()
 			},
 			dataType:"html",
 			success: function(data){

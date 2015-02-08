@@ -14,7 +14,9 @@
 */
 header("Content-type: text/html; charset=utf-8");
 
-/*  第一次使用必讀
+/*
+ *  # Readme
+ *  第一次使用必讀
  *  先將 config.sample.php 改名成 config.php
  *  然後訪問一次
  *  http://站點網址/index.php?action=regenerate_config
@@ -22,117 +24,151 @@ header("Content-type: text/html; charset=utf-8");
  *  改成 $regenerate_config = false;
  *  即可完成安裝過程
 */
-require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . "config.php";
+$config = dirname(__FILE__) . DIRECTORY_SEPARATOR . "config.php";
+if(!file_exists($config)){
+	die('<h1>Please read index.php\'s code comment to set up the Shortener.</h1>');
+}
+require_once $config;
 global $json;
 global $newURL;
 global $regenerate_config;
+global $r_enabled;
+global $r_secret_key;
+global $r_site_key;
+$reCAPTCHA_GET = 'https://www.google.com/recaptcha/api/siteverify?';
+$reCAPTCHA_JS = ($r_enabled) ? "<script src='https://www.google.com/recaptcha/api.js'></script>" : '<!-- header end -->';
+$reCAPTCHA_DIV = ($r_enabled) ? "<br /><div class=\"g-recaptcha\" align=\"center\" data-sitekey=\"{$r_site_key}\"></div>" : '<!-- form end -->';
 $pattern = "/^(([a-z]+[0-9]+)|([0-9]+[a-z]+))[a-z0-9]*$/i";
 
 function __($text){
 	global $lang;
 	return $lang[$text];
 }
+function reCAPTCHA_verify($g_recaptcha_response){
+	global $reCAPTCHA_GET;
+	global $r_secret_key;
+	global $r_site_key;
+	$arguments = "secret={$r_secret_key}&response={$g_recaptcha_response}";
+	$getResponse = file_get_contents($reCAPTCHA_GET . $arguments);
+	$answers = json_decode($getResponse, true);
+    if(trim($answers['success']) == true){
+        return true;
+    } else {
+        return false;
+    }
+}
 
 $json = dirname(__FILE__) . DIRECTORY_SEPARATOR . $json;
 if($newURL == 'http://site/'){
 	die(__('DEFAULT_SITEURL'));
 }
+if($r_enabled){
+	if($r_secret_key == ''){
+		die('<h1>' . __('MISSING_SECRET_KEY') . '</h1>');
+	} elseif($r_site_key == ''){
+		die('<h1>' . __('MISSING_SITE_KEY') . '</h1>');
+	}
+}
 
 if(isset($_POST['action']) and $_POST['action'] == 'generate'){
-	if (isset($_POST['url']) and
-		stripos($_POST['url'], 'http') !== FALSE and
-		stripos($_POST['url'], ':') !== FALSE and
-		stripos($_POST['url'], '//') !== FALSE and
-		stripos($_POST['url'], '.') !== FALSE and
-		stripos($_POST['url'], '\r') === FALSE and
-		stripos($_POST['url'], '\n') === FALSE and
-		stripos($_POST['url'], '%00') === FALSE and
-		stripos($_POST['url'], '"') === FALSE and
-		stripos($_POST['url'], '\'') === FALSE and
-		stripos($_POST['url'], '{') === FALSE and
-		stripos($_POST['url'], '}') === FALSE){
+	if(isset($_POST['recaptchaResponse']) and reCAPTCHA_verify($_POST['recaptchaResponse'])){
+		if (isset($_POST['url']) and
+			stripos($_POST['url'], 'http') !== FALSE and
+			stripos($_POST['url'], ':') !== FALSE and
+			stripos($_POST['url'], '//') !== FALSE and
+			stripos($_POST['url'], '.') !== FALSE and
+			stripos($_POST['url'], '\r') === FALSE and
+			stripos($_POST['url'], '\n') === FALSE and
+			stripos($_POST['url'], '%00') === FALSE and
+			stripos($_POST['url'], '"') === FALSE and
+			stripos($_POST['url'], '\'') === FALSE and
+			stripos($_POST['url'], '{') === FALSE and
+			stripos($_POST['url'], '}') === FALSE){
 
-		$done = false;
-		$url = $_POST['url'];
-		$valueADD = ' value="' . $_POST['url'] . '"';
-		$urlJSON = json_decode(file_get_contents($json), true);
-		foreach ($urlJSON as $key => $value) {
-			if($value == $url and $done == false and !isset($_POST['id'])){
-				$newURL .= $key;
-				echo str_replace('{url}', '<a href="' . $newURL . '">' . $newURL . '</a>', __('SHORTENED'));
+			$done = false;
+			$url = $_POST['url'];
+			$valueADD = ' value="' . $_POST['url'] . '"';
+			$urlJSON = json_decode(file_get_contents($json), true);
+			foreach ($urlJSON as $key => $value) {
+				if($value == $url and $done == false and !isset($_POST['id'])){
+					$newURL .= $key;
+					echo str_replace('{url}', '<a href="' . $newURL . '">' . $newURL . '</a>', __('SHORTENED'));
+					$done = true;
+				}
+			}
+			$urlJSON = json_decode(file_get_contents($json), true);
+			$PID = $_POST['id'];
+			if(isset($urlJSON[$PID])){
+				$newURL .= $id;
+				echo __('CODE_USED');
 				$done = true;
 			}
-		}
-		$urlJSON = json_decode(file_get_contents($json), true);
-		$PID = $_POST['id'];
-		if(isset($urlJSON[$PID])){
-			$newURL .= $id;
-			echo __('CODE_USED');
-			$done = true;
-		}
-		unset($PID);
+			unset($PID);
 
-		$ch = curl_init();
-		curl_setopt($ch, CURLOPT_URL, $url);
-		curl_setopt($ch, CURLOPT_HEADER, true);
-		curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-		$urlHeader = curl_exec($ch);
-		$uurl = curl_getinfo($ch, CURLINFO_EFFECTIVE_URL);
-		if($url != $uurl){
-			$url = $uurl;
-			unset($uurl);
-		}
-
-		if(!$done){
-			if(!isset($_POST['id']) or strlen($_POST['id'])==0){
-				$x = sprintf("%u", crc32($url));
-				$id = '';
-				while($x > 0){
-					$s = $x % 62;
-					if ($s > 35){
-						$s = chr($s + 61);
-					} elseif ($s > 9 && $s <= 35){
-						$s = chr($s + 55);
-					}
-					$id .= $s;
-					$x = floor($x/62);
-				}
-				$urlJSON[$id] = $url;
-				$fn = fopen($json, "w");
-				foreach ($urlJSON as $key => $value) {
-				    $ukey = urlencode($key);
-				    $uvalue = urlencode($value);
-				    $new_urlJSON[$ukey] = $uvalue;
-				}
-				fwrite($fn, urldecode(json_encode($new_urlJSON)));
-				fclose($fn);
-
-				$newURL .= $id;
-				echo str_replace('{url}', '<a href="' . $newURL . '">' . $newURL . '</a>', __('SHORTENED'));
-			} elseif(strlen($_POST['id'])!==5 and strlen($_POST['id'])!==0){
-				echo __('ERR_CODE_LENGTH');
-			} elseif(!preg_match($pattern, $_POST['id']) and strlen($_POST['id'])!==0){
-				echo __('ERR_CODE_TEXT');
-			} else {
-				$id = $_POST['id'];
-				$urlJSON[$id] = $url;
-				$fn = fopen($json, "w");
-				foreach ($urlJSON as $key => $value) {
-				    $ukey = urlencode($key);
-				    $uvalue = urlencode($value);
-				    $new_urlJSON[$ukey] = $uvalue;
-				}
-				fwrite($fn, urldecode(json_encode($new_urlJSON)));
-				fclose($fn);
-
-				$newURL .= $id;
-				echo str_replace('{url}', '<a href="' . $newURL . '">' . $newURL . '</a>', __('SHORTENED'));
+			$ch = curl_init();
+			curl_setopt($ch, CURLOPT_URL, $url);
+			curl_setopt($ch, CURLOPT_HEADER, true);
+			curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+			curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+			$urlHeader = curl_exec($ch);
+			$uurl = curl_getinfo($ch, CURLINFO_EFFECTIVE_URL);
+			if($url != $uurl){
+				$url = $uurl;
+				unset($uurl);
 			}
+
+			if(!$done){
+				if(!isset($_POST['id']) or strlen($_POST['id'])==0){
+					$x = sprintf("%u", crc32($url));
+					$id = '';
+					while($x > 0){
+						$s = $x % 62;
+						if ($s > 35){
+							$s = chr($s + 61);
+						} elseif ($s > 9 && $s <= 35){
+							$s = chr($s + 55);
+						}
+						$id .= $s;
+						$x = floor($x/62);
+					}
+					$urlJSON[$id] = $url;
+					$fn = fopen($json, "w");
+					foreach ($urlJSON as $key => $value) {
+					    $ukey = urlencode($key);
+					    $uvalue = urlencode($value);
+					    $new_urlJSON[$ukey] = $uvalue;
+					}
+					fwrite($fn, urldecode(json_encode($new_urlJSON)));
+					fclose($fn);
+
+					$newURL .= $id;
+					echo str_replace('{url}', '<a href="' . $newURL . '">' . $newURL . '</a>', __('SHORTENED'));
+				} elseif(strlen($_POST['id'])!==5 and strlen($_POST['id'])!==0){
+					echo __('ERR_CODE_LENGTH');
+				} elseif(!preg_match($pattern, $_POST['id']) and strlen($_POST['id'])!==0){
+					echo __('ERR_CODE_TEXT');
+				} else {
+					$id = $_POST['id'];
+					$urlJSON[$id] = $url;
+					$fn = fopen($json, "w");
+					foreach ($urlJSON as $key => $value) {
+					    $ukey = urlencode($key);
+					    $uvalue = urlencode($value);
+					    $new_urlJSON[$ukey] = $uvalue;
+					}
+					fwrite($fn, urldecode(json_encode($new_urlJSON)));
+					fclose($fn);
+
+					$newURL .= $id;
+					echo str_replace('{url}', '<a href="' . $newURL . '">' . $newURL . '</a>', __('SHORTENED'));
+				}
+			}
+		} else {
+			echo __('ERR_URL_FORMAT');
+			$valueADD = ' value="' . $_POST['url'] . '"';
 		}
 	} else {
-		echo __('ERR_URL_FORMAT');
-		$valueADD = ' value="' . $_POST['url'] . '"';
+		echo __('ERR_RECAPTCHA');
 	}
 	exit;
 }
@@ -145,6 +181,7 @@ if(isset($_POST['action']) and $_POST['action'] == 'generate'){
     <link href='http://fonts.googleapis.com/css?family=Lato:400,700' rel='stylesheet' type='text/css'>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
     <script src="<?php echo $newURL;?>form.js"></script>
+    <?php echo $reCAPTCHA_JS;?>
   </head>
   <body>
     <form action="#" method="post" name="Shortener">
@@ -168,7 +205,8 @@ if(isset($_GET['action']) and $_GET['action'] == 'regenerate_config' and $regene
         <input type="text" class="button" id="id" name="id" placeholder="<?php echo __('CODE_PLACEHOLDER');?>" maxlength="5">
         <input type="submit" class="button" id="submit" value="SHORTEN!">
       </div>
-      <input type="hidden" id="action" name="action" value="generate">
+      <?php echo $reCAPTCHA_DIV;?>
+	  <input type="hidden" id="action" name="action" value="generate">
     </form>
   </body>
 </html>
