@@ -27,6 +27,7 @@ require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . "config.php";
 global $json;
 global $newURL;
 global $regenerate_config;
+$pattern = "/^(([a-z]+[0-9]+)|([0-9]+[a-z]+))[a-z0-9]*$/i";
 
 function generateToken(){
 	return md5(substr(md5(uniqid(rand())), 0, 12) . substr(md5(uniqid(time())), 0, 12));
@@ -89,6 +90,19 @@ if(isset($_POST['action']) and $_POST['action'] == 'generate' and @$_POST['token
 				$done = true;
 			}
 			unset($PID);
+
+			$ch = curl_init();
+			curl_setopt($ch, CURLOPT_URL, $url);
+			curl_setopt($ch, CURLOPT_HEADER, true);
+			curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+			curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+			$urlHeader = curl_exec($ch);
+			$uurl = curl_getinfo($ch, CURLINFO_EFFECTIVE_URL);
+			if($url != $uurl){
+				$url = $uurl;
+				unset($uurl);
+			}
+
 			if(!$done){
 				if(!isset($_POST['id']) or strlen($_POST['id'])==0){
 					$x = sprintf("%u", crc32($url));
@@ -117,7 +131,9 @@ if(isset($_POST['action']) and $_POST['action'] == 'generate' and @$_POST['token
 					echo str_replace('{url}', '<a href="' . $newURL . '">' . $newURL . '</a>', __('SHORTENED'));
 				} elseif(strlen($_POST['id'])!==5 and strlen($_POST['id'])!==0){
 					echo __('ERR_CODE_LENGTH');
-				} elseif(!preg_match("/^(([a-z]+[0-9]+)|([0-9]+[a-z]+))[a-z0-9]*$/i", $_POST['id']) and strlen($_POST['id'])!==0){
+				} elseif(!preg_match($pattern, $_POST['id']) and strlen($_POST['id'])!==0){
+					echo __('ERR_CODE_TEXT');
+				} elseif(explode('') and preg_match($pattern, $_POST['id'])){
 					echo __('ERR_CODE_TEXT');
 				} else {
 					$id = $_POST['id'];

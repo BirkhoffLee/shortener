@@ -15,6 +15,5 @@ if(!isset($urlJSON[$id])){
 	header('Location: /index.php');
 	exit;
 }
-header('Location: ' . $urlJSON[$id]);
-exit;
-?>
+?><meta http-equiv="refresh" content="3;url=<?php echo $urlJSON[$id]; ?>" />
+Redirecting you to <?php echo $urlJSON[$id]; ?>...
