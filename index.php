@@ -187,6 +187,7 @@ if(isset($_POST['action'])){
   <head>
     <meta charset="utf-8">
     <title>URL Shortener - Powered by Birkhoff</title>
+    <meta name="viewport" content="width=device-width; initial-scale=1.0" />
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
     <script src="<?php echo $newURL;?>form.js"></script>
     <?php echo $reCAPTCHA_JS;?>
