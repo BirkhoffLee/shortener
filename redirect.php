@@ -14,6 +14,7 @@ $urlJSON = json_decode(file_get_contents($json), true);
 if(!isset($urlJSON[$id])){
 	header('Location: /index.php');
 	exit;
+} else {
+	header('Location: ' . $urlJSON[$id]);
+	exit;
 }
-?><meta http-equiv="refresh" content="3;url=<?php echo $urlJSON[$id]; ?>" />
-Redirecting you to <a href=<?php echo $urlJSON[$id]; ?>><?php echo $urlJSON[$id]; ?></a>...

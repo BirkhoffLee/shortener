@@ -55,5 +55,6 @@ $lang = array(
 	'CODE_PLACEHOLDER' => '自定代碼 (可空)',
 	'MISSING_SECRET_KEY' => 'Google reCAPTCHA API 需要使用 secret key，請在 config.php 中查看說明。',
 	'MISSING_SITE_KEY' => 'Google reCAPTCHA API 需要使用 site key，請在 config.php 中查看說明。',
-	'ERR_RECAPTCHA' => '請勾選 “我不是機器人” 的選項！'
+	'ERR_RECAPTCHA' => '請勾選 “我不是機器人” 的選項！',
+	'ERR_GENERATE' => '發生系統錯誤。'
 	);
