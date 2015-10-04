@@ -1,8 +1,7 @@
 URL Shortener
 =====
     作者 Birkhoff
-    部落格 http://b.irkhoff.com  
-    此為 http://reurl.us 所使用的原始碼  
+    部落格 https://blog.birkhoff.me  
 
 系統需求
 ------
@@ -13,7 +12,7 @@ URL Shortener
 ------
     The MIT License (MIT)  
 
-    Copyright (c) 2015 Birkhoff  
+    Copyright (c) 2015 Birkhoff Lee  
 
     Permission is hereby granted, free of charge, to any person obtaining a copy
     of this software and associated documentation files (the "Software"), to deal
